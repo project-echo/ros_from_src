@@ -41,9 +41,7 @@ To build ros entirely from source without using a PPA (or even the debian ros pa
     ../build.sh
     sudo chown root /opt/ros/noetic
 
-## Export variables to .bashrc
-
-    cat << 'EOF' >> ~/.bashrc
+## Export variables and source
 
     # Make sure to check the ros_from_src path before exporting
     export ROS_BUILD_DIR=$HOME/ros_from_src/build/ #CHANGE to your ros_from_src/build folder
@@ -52,9 +50,6 @@ To build ros entirely from source without using a PPA (or even the debian ros pa
     export PYTHONPATH=$PYTHONPATH:$ROS_BUILD_DIR/ros/local/lib/python3.12/dist-packages/
     source $ROS_BUILD_DIR/catkin_ws/devel/setup.bash
 
-    EOF
-
-    exec bash
 
 If you have problems compiling packages that use pcl: build processes complaining they depend on `usb-1.0` but can't find it, apply this patch to one of pcl's included cmake files:
 
