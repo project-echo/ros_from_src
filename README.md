@@ -44,11 +44,7 @@ To build ros entirely from source without using a PPA (or even the debian ros pa
 ## Export variables and source
 
     # Make sure to check the ros_from_src path before exporting
-    export ROS_BUILD_DIR=$HOME/ros_from_src/build/ #CHANGE to your ros_from_src/build folder
-    export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$ROS_BUILD_DIR/ros/lib/cache
-    export PATH=$ROS_BUILD_DIR/ros/local/bin:$PATH
-    export PYTHONPATH=$PYTHONPATH:$ROS_BUILD_DIR/ros/local/lib/python3.12/dist-packages/
-    source $ROS_BUILD_DIR/catkin_ws/devel/setup.bash
+    source $HOME/ros_from_src/source.bash # change to path on your system
 
 
 If you have problems compiling packages that use pcl: build processes complaining they depend on `usb-1.0` but can't find it, apply this patch to one of pcl's included cmake files:
