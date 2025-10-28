@@ -16,7 +16,7 @@ To build ros entirely from source without using a PPA (or even the debian ros pa
 ### Install orocos_kdl 
 
     sudo mkdir -p /opt/orocos/noetic
-    sudo chwown <youruser> /opt/orocos/noetic
+    sudo chown <youruser> /opt/orocos/noetic
 
     git clone https://github.com/orocos/orocos_kinematics_dynamics.git
     cd orocos_kinematics_dynamics/orocos_kdl 
