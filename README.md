@@ -36,7 +36,7 @@ To build ros entirely from source without using a PPA (or even the debian ros pa
     cd ros_from_src/build
 
     # The build.sh file will also install to /opt/ros/noetic
-    sudo mkdir /opt/ros/noetic
+    sudo mkdir -p /opt/ros/noetic
     sudo chown <youruser> /opt/ros/noetic
     ../build.sh
     sudo chown root /opt/ros/noetic
