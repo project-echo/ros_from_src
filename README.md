@@ -44,6 +44,7 @@ To build ros entirely from source without using a PPA (or even the debian ros pa
 ## Export variables and source
 
     # Make sure to check the ros_from_src path before exporting
+    # Also add this to your ~/.bashrc
     source $HOME/ros_from_src/source.bash # change to path on your system
 
 
