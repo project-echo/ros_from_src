@@ -7,4 +7,3 @@ export ROS_BUILD_DIR=$(dirname ${BASH_SOURCE[0]})/build
 export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$ROS_BUILD_DIR/ros/lib/cache
 export PATH=$ROS_BUILD_DIR/ros/local/bin:$PATH
 export PYTHONPATH=$PYTHONPATH:$ROS_BUILD_DIR/ros/local/lib/python3.12/dist-packages/
-source $ROS_BUILD_DIR/catkin_ws/devel/setup.bash
