@@ -48,3 +48,13 @@ apt-get install -y libboost-python-dev
 apt-get install -y libyaml-cpp-dev
 apt-get install -y libbondcpp-dev
 apt-get install -y libcgal-dev
+
+# Optional: rqt_bag dependencies
+if [ "${WITH_RQT_BAG}" = "1" ]; then
+  apt-get install -y python3-pyqt5
+  apt-get install -y pyqt5-dev
+  apt-get install -y pyqt5-dev-tools
+  apt-get install -y python3-sip-dev
+  apt-get install -y qtbase5-dev
+  apt-get install -y libtinyxml-dev
+fi

@@ -69,3 +69,12 @@ git clone https://github.com/ros-o/ros_environment
 git clone https://github.com/ros-infrastructure/rospkg
 git clone https://github.com/ros-infrastructure/rosdistro
 git clone https://github.com/lucasw/rosdep --branch disable_root_etc_ros
+
+# Optional: rqt_bag and its dependencies
+if [ "${WITH_RQT_BAG}" = "1" ]; then
+  cd $WS
+  git clone https://github.com/ros-visualization/python_qt_binding --branch noetic-devel
+  git clone https://github.com/ros-visualization/qt_gui_core --branch noetic-devel
+  git clone https://github.com/ros-visualization/rqt --branch noetic-devel
+  git clone https://github.com/ros-visualization/rqt_bag --branch noetic-devel
+fi

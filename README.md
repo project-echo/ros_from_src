@@ -41,6 +41,15 @@ To build ros entirely from source without using a PPA (or even the debian ros pa
     ../build.sh
     sudo chown root /opt/ros/noetic
 
+## Optional: rqt_bag
+
+To also build `rqt_bag` (for visualizing `.bag` files), set `WITH_RQT_BAG=1` before running the clone and dependency scripts:
+
+    WITH_RQT_BAG=1 ../git_clone.sh
+    sudo -E WITH_RQT_BAG=1 ../dependencies.sh
+
+Then rebuild with `../build.sh` — catkin will automatically pick up the new packages.
+
 ## Export variables and source
 
     # Make sure to check the ros_from_src path before exporting
