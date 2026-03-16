@@ -50,6 +50,18 @@ To also build `rqt_bag` (for visualizing `.bag` files), set `WITH_RQT_BAG=1` bef
 
 Then rebuild with `../build.sh` — catkin will automatically pick up the new packages.
 
+## Optional: rviz
+
+To also build `rviz`, set `WITH_RVIZ=1` before running the clone and dependency scripts:
+
+    WITH_RVIZ=1 ../git_clone.sh
+    sudo -E WITH_RVIZ=1 ../dependencies.sh
+
+Then rebuild with `../build.sh`. Both options can be combined:
+
+    WITH_RQT_BAG=1 WITH_RVIZ=1 ../git_clone.sh
+    sudo -E WITH_RQT_BAG=1 WITH_RVIZ=1 ../dependencies.sh
+
 ## Export variables and source
 
     # Make sure to check the ros_from_src path before exporting

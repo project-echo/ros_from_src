@@ -58,3 +58,21 @@ if [ "${WITH_RQT_BAG}" = "1" ]; then
   apt-get install -y qtbase5-dev
   apt-get install -y libtinyxml-dev
 fi
+
+# Optional: rviz dependencies
+if [ "${WITH_RVIZ}" = "1" ]; then
+  apt-get install -y libogre-1.12-dev
+  apt-get install -y libgl1-mesa-dev
+  apt-get install -y libassimp-dev
+  apt-get install -y libcurl4-openssl-dev
+  apt-get install -y liburdfdom-dev
+  apt-get install -y liburdfdom-headers-dev
+  apt-get install -y libtinyxml-dev
+  apt-get install -y python3-pykdl
+  # Qt5 dependencies (may already be installed by WITH_RQT_BAG)
+  apt-get install -y python3-pyqt5
+  apt-get install -y pyqt5-dev
+  apt-get install -y pyqt5-dev-tools
+  apt-get install -y python3-sip-dev
+  apt-get install -y qtbase5-dev
+fi

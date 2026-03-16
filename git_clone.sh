@@ -48,7 +48,9 @@ touch geometry/tf_conversions/CATKIN_IGNORE
 git clone https://github.com/ros/angles --branch noetic-devel
 git clone https://github.com/ros/geometry2 --branch noetic-devel
 touch geometry2/tf2_bullet/CATKIN_IGNORE
-touch geometry2/tf2_geometry_msgs/CATKIN_IGNORE
+if [ "${WITH_RVIZ}" != "1" ]; then
+  touch geometry2/tf2_geometry_msgs/CATKIN_IGNORE
+fi
 touch geometry2/test_tf2/CATKIN_IGNORE
 git clone https://github.com/ros/actionlib
 
@@ -77,4 +79,20 @@ if [ "${WITH_RQT_BAG}" = "1" ]; then
   git clone https://github.com/ros-visualization/qt_gui_core --branch noetic-devel
   git clone https://github.com/ros-visualization/rqt --branch noetic-devel
   git clone https://github.com/ros-visualization/rqt_bag --branch noetic-devel
+fi
+
+# Optional: rviz and its dependencies
+if [ "${WITH_RVIZ}" = "1" ]; then
+  cd $WS
+  # python_qt_binding may already be cloned by WITH_RQT_BAG
+  [ ! -d python_qt_binding ] && git clone https://github.com/ros-visualization/python_qt_binding --branch noetic-devel
+  git clone https://github.com/ros/resource_retriever --branch noetic-devel
+  git clone https://github.com/ros/rosconsole_bridge --branch noetic-devel
+  git clone https://github.com/ros/urdf --branch noetic-devel
+  git clone https://github.com/ros-visualization/interactive_markers --branch noetic-devel
+  git clone https://github.com/ros-perception/laser_geometry --branch noetic-devel
+  git clone https://github.com/ros/media_export --branch kinetic-devel
+  git clone https://github.com/ros-planning/navigation_msgs --branch ros1
+  git clone https://github.com/ros-visualization/view_controller_msgs --branch lunar-devel
+  git clone https://github.com/ros-visualization/rviz --branch noetic-devel
 fi
