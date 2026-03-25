@@ -81,14 +81,26 @@ if [ "${WITH_RQT_BAG}" = "1" ]; then
   git clone https://github.com/ros-visualization/rqt_bag --branch noetic-devel
 fi
 
+# Optional: robot_state_publisher and its dependencies
+if [ "${WITH_ROBOT_STATE_PUBLISHER}" = "1" ]; then
+  cd $WS
+  git clone https://github.com/ros/resource_retriever --branch noetic-devel
+  git clone https://github.com/ros/rosconsole_bridge --branch noetic-devel
+  git clone https://github.com/ros/urdf --branch noetic-devel
+  git clone https://github.com/ros/kdl_parser --branch noetic-devel
+  git clone https://github.com/ros/robot_state_publisher --branch noetic-devel
+  git clone https://github.com/ros/joint_state_publisher --branch noetic-devel
+fi
+
 # Optional: rviz and its dependencies
 if [ "${WITH_RVIZ}" = "1" ]; then
   cd $WS
   # python_qt_binding may already be cloned by WITH_RQT_BAG
   [ ! -d python_qt_binding ] && git clone https://github.com/ros-visualization/python_qt_binding --branch noetic-devel
-  git clone https://github.com/ros/resource_retriever --branch noetic-devel
-  git clone https://github.com/ros/rosconsole_bridge --branch noetic-devel
-  git clone https://github.com/ros/urdf --branch noetic-devel
+  # resource_retriever/rosconsole_bridge/urdf may already be cloned by WITH_ROBOT_STATE_PUBLISHER
+  [ ! -d resource_retriever ] && git clone https://github.com/ros/resource_retriever --branch noetic-devel
+  [ ! -d rosconsole_bridge ] && git clone https://github.com/ros/rosconsole_bridge --branch noetic-devel
+  [ ! -d urdf ] && git clone https://github.com/ros/urdf --branch noetic-devel
   git clone https://github.com/ros-visualization/interactive_markers --branch noetic-devel
   git clone https://github.com/ros-perception/laser_geometry --branch noetic-devel
   git clone https://github.com/ros/media_export --branch kinetic-devel

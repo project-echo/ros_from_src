@@ -59,6 +59,13 @@ if [ "${WITH_RQT_BAG}" = "1" ]; then
   apt-get install -y libtinyxml-dev
 fi
 
+# Optional: robot_state_publisher dependencies
+if [ "${WITH_ROBOT_STATE_PUBLISHER}" = "1" ]; then
+  apt-get install -y liburdfdom-dev
+  apt-get install -y liburdfdom-headers-dev
+  apt-get install -y libcurl4-openssl-dev
+fi
+
 # Optional: rviz dependencies
 if [ "${WITH_RVIZ}" = "1" ]; then
   apt-get install -y libogre-1.12-dev

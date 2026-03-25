@@ -50,6 +50,15 @@ To also build `rqt_bag` (for visualizing `.bag` files), set `WITH_RQT_BAG=1` bef
 
 Then rebuild with `../build.sh` — catkin will automatically pick up the new packages.
 
+## Optional: robot_state_publisher and joint_state_publisher
+
+To also build `robot_state_publisher` and `joint_state_publisher`, set `WITH_ROBOT_STATE_PUBLISHER=1` before running the clone and dependency scripts:
+
+    WITH_ROBOT_STATE_PUBLISHER=1 ../git_clone.sh
+    sudo -E WITH_ROBOT_STATE_PUBLISHER=1 ../dependencies.sh
+
+Then rebuild with `../build.sh`.
+
 ## Optional: rviz
 
 To also build `rviz`, set `WITH_RVIZ=1` before running the clone and dependency scripts:
@@ -57,10 +66,10 @@ To also build `rviz`, set `WITH_RVIZ=1` before running the clone and dependency 
     WITH_RVIZ=1 ../git_clone.sh
     sudo -E WITH_RVIZ=1 ../dependencies.sh
 
-Then rebuild with `../build.sh`. Both options can be combined:
+Then rebuild with `../build.sh`. All options can be combined:
 
-    WITH_RQT_BAG=1 WITH_RVIZ=1 ../git_clone.sh
-    sudo -E WITH_RQT_BAG=1 WITH_RVIZ=1 ../dependencies.sh
+    WITH_RQT_BAG=1 WITH_RVIZ=1 WITH_ROBOT_STATE_PUBLISHER=1 ../git_clone.sh
+    sudo -E WITH_RQT_BAG=1 WITH_RVIZ=1 WITH_ROBOT_STATE_PUBLISHER=1 ../dependencies.sh
 
 ## Export variables and source
 
