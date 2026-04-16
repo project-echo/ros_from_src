@@ -23,6 +23,7 @@ jobs:
         uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
         with:
           path: other/src/ros_from_src
+          persist-credentials: false
 
       - name: os version
         run: |
@@ -131,6 +132,7 @@ jobs:
         with:
           repository: dirk-thomas/vcstool
           path: other/src/vcstool
+          persist-credentials: false
 
       - name: vcs
         run: |
@@ -144,6 +146,7 @@ jobs:
         with:
           repository: osrf/osrf_pycommon
           path: other/src/osrf_pycommon
+          persist-credentials: false
 
       - name: pycommon
         run: |
@@ -157,6 +160,7 @@ jobs:
           repository: lucasw/catkin_tools
           path: other/src/catkin_tools
           ref: sanitize_cmake_prefix_path
+          persist-credentials: false
 
       - name: catkin tools
         run: |
