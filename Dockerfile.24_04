@@ -1,0 +1,334 @@
+###############################################################################
+# ROS Noetic from source — multi-stage Docker build (Ubuntu 24.04)
+#
+# Build targets:
+#   docker build -f Dockerfile.24_04 --target devel   -t ros-noetic:devel   .
+#   docker build -f Dockerfile.24_04 --target runtime -t ros-noetic:runtime .
+#
+# 'devel'   — build tools + ROS core, for compiling your own packages on top
+# 'runtime' — minimal, just enough to run ROS nodes
+#
+# Workflow for your own packages:
+#   1. Use ros-noetic:devel as the base to compile your catkin workspace
+#   2. COPY the result into ros-noetic:runtime for deployment
+###############################################################################
+
+# =============================================================================
+# Stage 1: Build ROS Noetic from source
+# =============================================================================
+FROM ubuntu:24.04 AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+SHELL ["/bin/bash", "-c"]
+
+# Build dependencies (base config — no rqt, rviz, or robot_state_publisher).
+# libbondcpp-dev and python3-rosunit are ROS debs not in stock Ubuntu 24.04;
+# both are built from source in the catkin workspace.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    bzip2 \
+    ca-certificates \
+    cmake \
+    coreutils \
+    git \
+    libbz2-dev \
+    libboost-dev \
+    libboost-filesystem-dev \
+    libboost-program-options-dev \
+    libboost-python-dev \
+    libboost-regex-dev \
+    libboost-thread-dev \
+    libcgal-dev \
+    libeigen3-dev \
+    libfmt-dev \
+    libgpgme-dev \
+    libgtest-dev \
+    liblog4cxx-dev \
+    liblz4-dev \
+    libpcl-dev \
+    libpoco-dev \
+    libtinyxml2-dev \
+    libyaml-cpp-dev \
+    lz4 \
+    mawk \
+    python-is-python3 \
+    python3 \
+    python3-dateutil \
+    python3-defusedxml \
+    python3-dev \
+    python3-distro \
+    python3-docutils \
+    python3-empy \
+    python3-gnupg \
+    python3-netifaces \
+    python3-pycryptodome \
+    python3-pyparsing \
+    python3-setuptools \
+    python3-yaml \
+    && rm -rf /var/lib/apt/lists/*
+
+# Everything installs to a single prefix for clean multi-stage copies
+ENV DEST=/opt/ros/noetic
+# setup.py installs to local/lib/.../dist-packages (Debian layout),
+# cmake installs with SETUPTOOLS_DEB_LAYOUT=OFF go to lib/.../site-packages.
+ENV PYTHONPATH=${DEST}/local/lib/python3.12/dist-packages:${DEST}/lib/python3.12/site-packages
+ENV PATH=${DEST}/local/bin:${DEST}/bin:${PATH}
+
+# ---- Clone source repositories ----
+WORKDIR /ros_build
+COPY git_clone.sh ./
+RUN ./git_clone.sh
+
+# ---- Build orocos_kdl (needed by tf2_kdl and geometry packages) ----
+RUN git clone --depth 1 https://github.com/orocos/orocos_kinematics_dynamics.git \
+    && cd orocos_kinematics_dynamics/orocos_kdl \
+    && mkdir build && cd build \
+    && cmake .. -DCMAKE_INSTALL_PREFIX=${DEST} \
+    && make -j$(nproc) && make install
+
+# ---- Python tool installs ----
+RUN cd src/catkin_pkg \
+    && python3 setup.py install --prefix=${DEST} \
+       --record install_manifest.txt --single-version-externally-managed
+RUN python -c "from catkin_pkg.package import parse_package"
+
+RUN cd src/osrf_pycommon \
+    && python3 setup.py install --prefix=${DEST} \
+       --record install_manifest.txt --single-version-externally-managed
+
+RUN cd src/catkin_tools \
+    && python3 setup.py install --prefix=${DEST} \
+       --record install_manifest.txt --single-version-externally-managed
+
+# ---- Bootstrap cmake installs ----
+# These must be installed before catkin build so that workspace packages
+# can find them via CMAKE_PREFIX_PATH.
+
+RUN mkdir -p /tmp/cb/catkin && cd /tmp/cb/catkin \
+    && cmake /ros_build/catkin_ws/src/catkin \
+       -DCATKIN_BUILD_BINARY_PACKAGE=ON \
+       -DCMAKE_INSTALL_PREFIX=${DEST} \
+       -DPYTHON_EXECUTABLE=/usr/bin/python \
+       -DSETUPTOOLS_DEB_LAYOUT=OFF \
+       -DCATKIN_INSTALL_INTO_PREFIX_ROOT=true \
+    && make -j$(nproc) && make install
+
+RUN mkdir -p /tmp/cb/console_bridge && cd /tmp/cb/console_bridge \
+    && cmake /ros_build/catkin_ws/src/console_bridge \
+       -DCMAKE_BUILD_TYPE=Release \
+       -DCMAKE_INSTALL_PREFIX=${DEST} \
+       -DCMAKE_INSTALL_LIBDIR=lib \
+    && make -j$(nproc) && make install
+
+ENV CMAKE_PREFIX_PATH=${DEST}:${DEST}/lib/cmake
+
+RUN mkdir -p /tmp/cb/cmake_modules && cd /tmp/cb/cmake_modules \
+    && cmake /ros_build/catkin_ws/src/cmake_modules \
+       -DCATKIN_BUILD_BINARY_PACKAGE=ON \
+       -DCMAKE_INSTALL_PREFIX=${DEST} \
+       -DPYTHON_EXECUTABLE=/usr/bin/python \
+       -DSETUPTOOLS_DEB_LAYOUT=OFF \
+    && make -j$(nproc) && make install
+
+RUN mkdir -p /tmp/cb/class_loader && cd /tmp/cb/class_loader \
+    && cmake /ros_build/catkin_ws/src/class_loader \
+       -DCATKIN_BUILD_BINARY_PACKAGE=ON \
+       -DCMAKE_INSTALL_PREFIX=${DEST} \
+       -DPYTHON_EXECUTABLE=/usr/bin/python \
+       -DSETUPTOOLS_DEB_LAYOUT=OFF \
+       -Dcmake_modules_DIR=${DEST}/share/cmake_modules/cmake/ \
+    && make -j$(nproc) && make install
+
+RUN mkdir -p /tmp/cb/ros_environment && cd /tmp/cb/ros_environment \
+    && cmake /ros_build/src/ros_environment \
+       -DCATKIN_BUILD_BINARY_PACKAGE=ON \
+       -DCMAKE_INSTALL_PREFIX=${DEST} \
+       -DPYTHON_EXECUTABLE=/usr/bin/python \
+       -DSETUPTOOLS_DEB_LAYOUT=OFF \
+    && make -j$(nproc) && make install
+
+RUN mkdir -p /tmp/cb/rospack && cd /tmp/cb/rospack \
+    && cmake /ros_build/catkin_ws/src/rospack \
+       -DCATKIN_BUILD_BINARY_PACKAGE=ON \
+       -DCMAKE_INSTALL_PREFIX=${DEST} \
+       -DPYTHON_EXECUTABLE=/usr/bin/python \
+       -DSETUPTOOLS_DEB_LAYOUT=OFF \
+       -Dcmake_modules_DIR=${DEST}/share/cmake_modules/cmake/ \
+    && make -j$(nproc) && make install
+
+RUN mkdir -p /tmp/cb/genmsg && cd /tmp/cb/genmsg \
+    && cmake /ros_build/catkin_ws/src/genmsg \
+       -DCATKIN_BUILD_BINARY_PACKAGE=ON \
+       -DCMAKE_INSTALL_PREFIX=${DEST} \
+       -DPYTHON_EXECUTABLE=/usr/bin/python \
+       -DSETUPTOOLS_DEB_LAYOUT=OFF \
+    && make -j$(nproc) && make install
+
+RUN mkdir -p /tmp/cb/genpy && cd /tmp/cb/genpy \
+    && cmake /ros_build/catkin_ws/src/genpy \
+       -DCATKIN_BUILD_BINARY_PACKAGE=ON \
+       -DCMAKE_INSTALL_PREFIX=${DEST} \
+       -DPYTHON_EXECUTABLE=/usr/bin/python \
+       -DSETUPTOOLS_DEB_LAYOUT=OFF \
+    && make -j$(nproc) && make install
+
+RUN mkdir -p /tmp/cb/roslib && cd /tmp/cb/roslib \
+    && cmake /ros_build/catkin_ws/src/ros/core/roslib \
+       -DCATKIN_BUILD_BINARY_PACKAGE=ON \
+       -DCMAKE_INSTALL_PREFIX=${DEST} \
+       -DPYTHON_EXECUTABLE=/usr/bin/python \
+       -DSETUPTOOLS_DEB_LAYOUT=OFF \
+       -Drospack_DIR=${DEST}/share/rospack/cmake/ \
+    && make -j$(nproc) && make install
+
+RUN mkdir -p /tmp/cb/rosbuild && cd /tmp/cb/rosbuild \
+    && cmake /ros_build/catkin_ws/src/ros/core/rosbuild \
+       -DCATKIN_BUILD_BINARY_PACKAGE=ON \
+       -DCMAKE_INSTALL_PREFIX=${DEST} \
+       -DPYTHON_EXECUTABLE=/usr/bin/python \
+       -DSETUPTOOLS_DEB_LAYOUT=OFF \
+    && make -j$(nproc) && make install
+
+# ---- Runtime Python packages ----
+RUN cd src/rospkg \
+    && python3 setup.py install --prefix=${DEST} \
+       --record install_manifest.txt --single-version-externally-managed
+
+RUN cd src/rosdistro \
+    && python3 setup.py install --prefix=${DEST} \
+       --record install_manifest.txt --single-version-externally-managed
+
+RUN cd src/rosdep \
+    && python3 setup.py install --prefix=${DEST} \
+       --record install_manifest.txt --single-version-externally-managed
+
+RUN rosdep init || true
+RUN rosdep update || true
+
+# ---- Catkin workspace build ----
+# All workspace packages install to the same prefix as the bootstrap packages.
+WORKDIR /ros_build/catkin_ws
+RUN source ${DEST}/setup.bash \
+    && catkin init \
+    && catkin config \
+       --install-space ${DEST} \
+       --merge-install \
+       --install \
+       --merge-devel \
+    && catkin build --cmake-args -DCMAKE_BUILD_TYPE=Release -Wno-deprecated
+
+# Verify the build
+RUN source ${DEST}/setup.bash && rospack list
+
+# Discover which system packages provide the shared libraries that
+# the built ROS binaries link against. Used by the runtime stage.
+# ldd reports paths under /lib/ but dpkg indexes under /usr/lib/ (they are
+# symlinked on Ubuntu 24.04).  Canonicalize with readlink before querying dpkg.
+RUN export LD_LIBRARY_PATH=${DEST}/lib:${LD_LIBRARY_PATH} \
+    && { find ${DEST}/lib -maxdepth 1 \( -name '*.so' -o -name '*.so.*' \); \
+         find ${DEST}/bin -maxdepth 1 -type f -executable; } \
+    | xargs ldd 2>/dev/null \
+    | grep -oP '(?<==> )(/usr)?/lib/\S+' \
+    | sort -u \
+    | xargs readlink -f \
+    | sort -u \
+    | xargs dpkg -S 2>/dev/null \
+    | cut -d: -f1 \
+    | sort -u \
+    > /tmp/runtime-lib-packages.txt \
+    && echo "Runtime packages:" && cat /tmp/runtime-lib-packages.txt
+
+
+# =============================================================================
+# Stage 2: Development image — build your own ROS packages against this
+# =============================================================================
+FROM ubuntu:24.04 AS devel
+
+ENV DEBIAN_FRONTEND=noninteractive
+SHELL ["/bin/bash", "-c"]
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    ca-certificates \
+    cmake \
+    git \
+    libbz2-dev \
+    libboost-dev \
+    libboost-filesystem-dev \
+    libboost-program-options-dev \
+    libboost-python-dev \
+    libboost-regex-dev \
+    libboost-thread-dev \
+    libcgal-dev \
+    libeigen3-dev \
+    libfmt-dev \
+    libgpgme-dev \
+    libgtest-dev \
+    liblog4cxx-dev \
+    liblz4-dev \
+    libpcl-dev \
+    libpoco-dev \
+    libtinyxml2-dev \
+    libyaml-cpp-dev \
+    lz4 \
+    python-is-python3 \
+    python3 \
+    python3-dateutil \
+    python3-defusedxml \
+    python3-dev \
+    python3-distro \
+    python3-docutils \
+    python3-empy \
+    python3-gnupg \
+    python3-netifaces \
+    python3-pycryptodome \
+    python3-pyparsing \
+    python3-setuptools \
+    python3-yaml \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /opt/ros/noetic /opt/ros/noetic
+
+ENV CMAKE_PREFIX_PATH=/opt/ros/noetic
+ENV PATH=/opt/ros/noetic/local/bin:/opt/ros/noetic/bin:${PATH}
+ENV PYTHONPATH=/opt/ros/noetic/local/lib/python3.12/dist-packages:/opt/ros/noetic/lib/python3.12/site-packages
+
+RUN echo 'source /opt/ros/noetic/setup.bash' >> /etc/bash.bashrc
+
+WORKDIR /catkin_ws
+
+
+# =============================================================================
+# Stage 3: Minimal runtime — just enough to run ROS nodes
+# =============================================================================
+FROM ubuntu:24.04 AS runtime
+
+ENV DEBIAN_FRONTEND=noninteractive
+SHELL ["/bin/bash", "-c"]
+
+# Runtime shared libraries discovered by ldd in the builder, plus Python.
+COPY --from=builder /tmp/runtime-lib-packages.txt /tmp/runtime-lib-packages.txt
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       python-is-python3 \
+       python3 \
+       python3-dateutil \
+       python3-defusedxml \
+       python3-distro \
+       python3-empy \
+       python3-gnupg \
+       python3-netifaces \
+       python3-pycryptodome \
+       python3-pyparsing \
+       python3-setuptools \
+       python3-yaml \
+    && xargs apt-get install -y --no-install-recommends < /tmp/runtime-lib-packages.txt \
+    && rm /tmp/runtime-lib-packages.txt \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /opt/ros/noetic /opt/ros/noetic
+
+ENV PATH=/opt/ros/noetic/local/bin:/opt/ros/noetic/bin:${PATH}
+ENV PYTHONPATH=/opt/ros/noetic/local/lib/python3.12/dist-packages:/opt/ros/noetic/lib/python3.12/site-packages
+
+RUN echo 'source /opt/ros/noetic/setup.bash' >> /etc/bash.bashrc
