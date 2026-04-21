@@ -41,6 +41,9 @@ To build ros entirely from source without using a PPA (or even the debian ros pa
     ../build.sh
     sudo chown root /opt/ros/noetic
 
+Everything installs to `/opt/ros/noetic` by default. Set the `DEST`
+environment variable before running to override.
+
 ## Optional: rqt_bag
 
 To also build `rqt_bag` (for visualizing `.bag` files), set `WITH_RQT_BAG=1` before running the clone and dependency scripts:
@@ -71,11 +74,10 @@ Then rebuild with `../build.sh`. All options can be combined:
     WITH_RQT_BAG=1 WITH_RVIZ=1 WITH_ROBOT_STATE_PUBLISHER=1 ../git_clone.sh
     sudo -E WITH_RQT_BAG=1 WITH_RVIZ=1 WITH_ROBOT_STATE_PUBLISHER=1 ../dependencies.sh
 
-## Export variables and source
+## Source
 
-    # Make sure to check the ros_from_src path before exporting
-    # Also add this to your ~/.bashrc
-    source $HOME/ros_from_src/source.bash # change to path on your system
+    # Add this to your ~/.bashrc
+    source /opt/ros/noetic/setup.bash
 
 
 If you have problems compiling packages that use pcl: build processes complaining they depend on `usb-1.0` but can't find it, apply this patch to one of pcl's included cmake files:
