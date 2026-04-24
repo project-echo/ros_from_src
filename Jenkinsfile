@@ -52,12 +52,16 @@ pipeline {
                     eval \$(aws ecr get-login --no-include-email --region eu-west-1)
 
                     docker build -f Dockerfile.24_04 --target devel \
-                        -t ${DOCKER_REPO}/${DEVEL_IMAGE}:${GIT_COMMIT} .
+                        -t ${DOCKER_REPO}/${DEVEL_IMAGE}:${GIT_COMMIT} \
+                        -t ${DOCKER_REPO}/${DEVEL_IMAGE}:${BUILD_NUMBER} .
                     docker push ${DOCKER_REPO}/${DEVEL_IMAGE}:${GIT_COMMIT}
+                    docker push ${DOCKER_REPO}/${DEVEL_IMAGE}:${BUILD_NUMBER}
 
                     docker build -f Dockerfile.24_04 --target runtime \
-                        -t ${DOCKER_REPO}/${RUNTIME_IMAGE}:${GIT_COMMIT} .
+                        -t ${DOCKER_REPO}/${RUNTIME_IMAGE}:${GIT_COMMIT} \
+                        -t ${DOCKER_REPO}/${RUNTIME_IMAGE}:${BUILD_NUMBER} .
                     docker push ${DOCKER_REPO}/${RUNTIME_IMAGE}:${GIT_COMMIT}
+                    docker push ${DOCKER_REPO}/${RUNTIME_IMAGE}:${BUILD_NUMBER}
                 """
             }
         }
