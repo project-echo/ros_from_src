@@ -57,6 +57,17 @@ if [ "${WITH_RQT_BAG}" = "1" ]; then
   apt-get install -y python3-sip-dev
   apt-get install -y qtbase5-dev
   apt-get install -y libtinyxml-dev
+  # rqt_bag_plugins (image + plot plugins inside rqt_bag)
+  apt-get install -y python3-cairo
+  apt-get install -y python3-pil
+  apt-get install -y python3-matplotlib
+  apt-get install -y python3-numpy
+  # Pillow 10 (shipped with Ubuntu 24.04) dropped PyQt5/PySide2 support from
+  # PIL.ImageQt — only PyQt6 and PySide6 are tried. rqt_bag's image plugin
+  # imports `from PIL.ImageQt import ImageQt` against PyQt5, which fails.
+  # Downgrade Pillow to a version that still supports PyQt5.
+  apt-get install -y python3-pip
+  pip3 install --break-system-packages 'Pillow<10'
 fi
 
 # Optional: robot_state_publisher dependencies

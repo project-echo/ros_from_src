@@ -53,6 +53,8 @@ To also build `rqt_bag` (for visualizing `.bag` files), set `WITH_RQT_BAG=1` bef
 
 Then rebuild with `../build.sh` — catkin will automatically pick up the new packages.
 
+This also pulls in `rqt_plot` and the Python deps (`python3-matplotlib`, `python3-numpy`, `python3-cairo`, `python3-pil`) so the `BagImagePlugin` and `BagPlotPlugin` inside `rqt_bag` load. On Ubuntu 24.04, `dependencies.sh` additionally installs `Pillow<10` via `pip` because the system Pillow (10.x) dropped PyQt5 support from `PIL.ImageQt`, which the image plugin needs.
+
 ## Optional: robot_state_publisher and joint_state_publisher
 
 To also build `robot_state_publisher` and `joint_state_publisher`, set `WITH_ROBOT_STATE_PUBLISHER=1` before running the clone and dependency scripts:

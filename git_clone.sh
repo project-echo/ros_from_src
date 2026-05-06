@@ -73,12 +73,15 @@ git clone https://github.com/ros-infrastructure/rosdistro
 git clone https://github.com/lucasw/rosdep --branch disable_root_etc_ros
 
 # Optional: rqt_bag and its dependencies
+# rqt_plot is needed by rqt_bag_plugins/BagPlotPlugin (the data plot view inside
+# rqt_bag); without it the plugin fails to load with "No module named 'rqt_plot'".
 if [ "${WITH_RQT_BAG}" = "1" ]; then
   cd $WS
   git clone https://github.com/ros-visualization/python_qt_binding --branch noetic-devel
   git clone https://github.com/ros-visualization/qt_gui_core --branch noetic-devel
   git clone https://github.com/ros-visualization/rqt --branch noetic-devel
   git clone https://github.com/ros-visualization/rqt_bag --branch noetic-devel
+  git clone https://github.com/ros-visualization/rqt_plot --branch noetic-devel
 fi
 
 # Optional: robot_state_publisher and its dependencies
